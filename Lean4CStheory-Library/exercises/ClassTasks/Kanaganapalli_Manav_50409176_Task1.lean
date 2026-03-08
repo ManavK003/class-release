@@ -63,7 +63,10 @@ example {a b : ℝ} (h1 : a = 3) (h2 : b = -1) : a + b = 2 :=
 
 -- (1 point) Exercise 0.1
 example {a b : ℝ} (h1 : a = 3) (h2 : b = 4) : a + 2 * b = 11 :=
-  sorry
+  calc
+    a + 2 * b = 3 + 2 * b := by rw [h1]
+    _ = 3 + 2 * 4 := by rw [h2]
+    _ = 11 := by norm_num
 
 -- Example 0.2
 example {n : ℕ} (h1 : c = 1) : 2 * n + 10 ≥ c * 2 := by
@@ -72,7 +75,7 @@ example {n : ℕ} (h1 : c = 1) : 2 * n + 10 ≥ c * 2 := by
 
 -- (1 point) Exercise 0.2
 example {n : ℕ} (h1 : c = 3) : 5 * n + 6 ≥ c := by
-  sorry
+  rw [h1]; linarith
 
 -- Example 0.3
 example {n : ℕ} (h1 : c = 5) : 4 * n ≤ c * n := by
@@ -89,7 +92,7 @@ example {n : ℕ} (h1 : c = 5) : 4 * n ≤ c * n := by
 
 -- (1 point) Exercise 0.3
 example {n : ℕ} (h1 : c = 2) : 4 * n + 3 ≥ c * (n + 1) := by
-  sorry
+  rw [h1]; linarith
 
 -- Example 0.4
 example {n : ℕ} (h1 : n ≥ 1) (h2 : c = 1) :
@@ -110,7 +113,7 @@ example {n : ℕ} (h1 : n ≥ 2) (h2 : c₁ = 1) (h3 : c₂ = 4) :
 -- (1 point) Exercise 0.4
 example {n : ℕ} (h1 : n ≥ 10) (h2 : c₁ = 1) (h3 : c₂ = 10) :
   c₁ * (2 * n + 1) ≤ 5 * n ∧ 5 * n ≤ c₂ * (2 * n + 1) := by
-  sorry
+  rw [h2, h3]; constructor <;> linarith
 
 /-! # Section 1: Asymptotic Analysis in Lean (5 points) -/
 /-!
@@ -125,12 +128,12 @@ def isBigO (f g : ℕ → ℝ) : Prop :=
 -- (1 point) Exercise 1.1
 -- Define Big-Omega using the same style as Big-O.
 def isBigOmega (f g : ℕ → ℝ) : Prop :=
-  sorry
+  ∃ (c n₀ : ℝ), 0 < c ∧ ∀ n : ℕ, n ≥ n₀ → f n ≥ c * g n
 
 -- (1 point) Exercise 1.2
 -- Define Big-Theta using Big-O and Big-Omega.
 def isBigTheta (f g : ℕ → ℝ) : Prop :=
-  sorry
+  isBigO f g ∧ isBigOmega f g
 
 -- Example 1.2
 example : isBigO (fun n ↦ (2 : ℝ) * n + 4) (fun n ↦ n) := by
@@ -144,15 +147,35 @@ example : isBigO (fun n ↦ (2 : ℝ) * n + 4) (fun n ↦ n) := by
 
 -- (1 point) Exercise 1.3
 example : isBigO (fun n ↦ (3 : ℝ) * n + 2) (fun n ↦ n) := by
-  sorry
+  use 4, 2
+  constructor
+  · linarith
+  intro n hn
+  calc (3 : ℝ) * n + 2 ≤ 3 * n + n := by linarith [hn]
+    _ = 4 * n := by ring
 
 -- (1 point) Exercise 1.4
 example : isBigOmega (fun n ↦ (3 : ℝ) * n + 2) (fun n ↦ n) := by
-  sorry
+  use 3, 0
+  constructor
+  · linarith
+  intro n hn
+  linarith
 
 -- (1 point) Exercise 1.5
 example : isBigTheta (fun n ↦ (3 : ℝ) * n + 2) (fun n ↦ n) := by
-  sorry
+  constructor
+  · use 4, 2
+    constructor
+    · linarith
+    intro n hn
+    calc (3 : ℝ) * n + 2 ≤ 3 * n + n := by linarith [hn]
+      _ = 4 * n := by ring
+  · use 3, 0
+    constructor
+    · linarith
+    intro n hn
+    linarith
 
 /-! # Section 2: Recursion and Induction (3 points) -/
 /-!
@@ -180,13 +203,14 @@ def sumOdd : ℕ → ℕ
 
 example (n : ℕ) : sumOdd n = (n + 1) ^ 2 := by
   induction n with
-  | zero =>
-      sorry
+  | zero => simp [sumOdd]
   | succ k IH =>
-      sorry
+      simp [sumOdd, IH]; ring
 
 -- (1 point) Exercise 2.2
 -- Define the Fibonacci function fib(n).
 -- Only the function definition is required.
-def fib : ℕ → ℕ :=
-  sorry
+def fib : ℕ → ℕ
+  | 0     => 0
+  | 1     => 1
+  | n + 2 => fib n + fib (n + 1)
